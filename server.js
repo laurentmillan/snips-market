@@ -147,13 +147,10 @@ app.get('/lists', function (req, res) {
   if(req.query.name){
     searchListByName(req.query.name)
     .then(list => {
-        if(list){
-          res.send(list);
-          return;
-        }else{
-          res.status(404).end();
-          return;
-        }
+      res.send(list);
+    })
+    .catch(err => {
+      res.status(404).send(err);
     })
   }else{
     getLists().then(lists => { res.send(lists) });
