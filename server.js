@@ -562,6 +562,20 @@ app.post('/intent', function(req, res) {
       .catch(err => {
         res.status(404).send(err);
       })
+    case "shivan:NumberItems":
+      searchListByName(listnameSlot.rawValue)
+      .then(list => {
+        getListItemByProductName(list.id, productSlot.rawValue)
+        .then(item => {
+          res.send(item.quantity);
+        })
+        .catch(err => {
+          res.status(404).send(err);
+        })
+      })
+      .catch(err => {
+        res.status(404).send(err);
+      })
     default:
       break;
   }
