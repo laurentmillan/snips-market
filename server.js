@@ -32,9 +32,11 @@ const backupData = function(){
 }
 
 const loadData = function(){
-  fs.readFile("data/db.json", "utf8", (err, data) => {
+  fs.readFile("data/db.json", "utf8", (err, readData) => {
     if(err)
       return console.log(err);
+    else
+      data = JSON.parse(readData);
     console.log("Data loaded");
   });
 }
