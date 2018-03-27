@@ -129,6 +129,20 @@ const getListById = function(listId){
   });
 }
 
+const addList = function(list){
+  return new Promise((resolve, reject) => {
+    let listToAdd = {
+      id: Math.round(Math.random()*1000000000),
+      name: list.name,
+      place: list.place,
+      items: []
+    }
+    data.lists.push(listToAdd);
+    backupData();
+    resolve(listToAdd);
+  })
+}
+
 app.get('/lists', function (req, res) {
   if(req.query.name){
     searchListByName(req.query.name)
@@ -158,6 +172,13 @@ app.get('/lists/:id', function (req, res) {
   })
 });
 
+app.post('/lists', function(req, res){
+  addList(req.body).then(list => {
+    res.send(list);
+  }).catch( err => {
+    res.status(404).send(err);
+  })
+})
 
 
 /***************
@@ -296,7 +317,7 @@ const addItemInList = function(listId, newItem){
   return new Promise((resolve, reject) => {
     getListById(listId)
     .then(list => {
-      newItem.id = Math.round(Math.random()*1000000);
+      newItem.id = Math.round(Math.random()*1000000000);
       list.items.push(newItem);
       backupData();
       resolve(newItem);
