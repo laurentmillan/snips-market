@@ -6,7 +6,8 @@ const app           = express();
 
 const config = require('./config.js');
 
-var Redis = require('ioredis');
+const fs            = require('fs');
+//var Redis = require('ioredis');
 //var redis = new Redis(6379, '127.0.0.1');
 
 Array.prototype.flatten = function() {
@@ -22,10 +23,30 @@ app.use(bodyParser.json({limit: '50mb'}));
 const server = http.createServer(app).listen(config.serverPort, function () {
 });
 
-let sampleDataAuthTokens = ["1234"]
+const backupData = function(){
+  fs.writeFile("data/db.json", JSON.stringify(data), function(err) {
+      if(err)
+        return console.log(err);
+      console.log("Data saved");
+  });
+}
 
-let sampleDataLists = [
-  {
+const loadData = function(){
+  fs.readFile("data/db.json", "utf8", (err, data) => {
+    if(err)
+      return console.log(err);
+    console.log("Data loaded");
+  });
+}
+
+let data = {
+  authTokens: [],
+  lists: [],
+  places: [],
+  products: []
+}
+
+let sampleDataLists = [{
     id: 0,
     name: "Carrefour",
     place: "Carrefour Market Chatillon",
@@ -46,21 +67,9 @@ let sampleDataLists = [
     name: "Picard",
     place: "Picard Chatillon",
     items: []
-  }
-]
+  }]
 
-let sampleDataPlaces = [
-  {
-    id: 0,
-    name: "Carrefour Market Chatillon",
-    shelves: [
-      "Fruits-Légumes",
-      "Viande"
-    ]
-  }
-]
-
-let sampleDataProducts = [
+let sampleProducts = [
   {
     id: 0,
     caption: "Carottes",
@@ -72,14 +81,13 @@ let sampleDataProducts = [
     caption: "PQ",
     names: ["PQ", "papier toilette", "papier wc"],
     shelf: "Hygiène"
-  }
-]
+  }]
 
 const authChecker = function(req, res, next){
   console.log(req.method + " " + req.originalUrl);
   if (req.path != "/login") {
     let AuthToken = req.get('Authorization');
-    if(sampleDataAuthTokens.find(validTokens => validTokens == AuthToken)){
+    if(data.authTokens.find(validTokens => validTokens == AuthToken)){
       next();
     }else{
       res.status(401).end();
@@ -97,7 +105,7 @@ app.use(authChecker);
 **************/
 const getLists = function(){
   return new Promise((resolve, reject) => {
-    resolve(sampleDataLists);
+    resolve(data.lists);
   });
 }
 
@@ -158,7 +166,7 @@ app.get('/lists/:id', function (req, res) {
 
 const getProducts = function(){
   return new Promise((resolve, reject) => {
-    resolve(sampleDataProducts);
+    resolve(data.products);
   });
 }
 
@@ -290,6 +298,7 @@ const addItemInList = function(listId, newItem){
     .then(list => {
       newItem.id = Math.round(Math.random()*1000000);
       list.items.push(newItem);
+      backupData();
       resolve(newItem);
     })
     .catch(err => {
@@ -305,7 +314,7 @@ const updateItem = function(listId, itemId, itemPatch){
       let updatedItem = JSON.parse(JSON.stringify(item));
       Object.keys(itemPatch).forEach(k => updatedItem[k] = itemPatch[k]);
 
-      let list = sampleDataLists.find(list => list.id == listId);
+      let list = data.lists.find(list => list.id == listId);
       list.items.splice(list.items.indexOf(item), 1, updatedItem);
       resolve(updatedItem);
     })
@@ -322,42 +331,11 @@ const addProduct = function(product){
       names: product.names?product.names:[product.caption],
       shelf: product.shelf?product.shelf:""
     };
-    sampleDataProducts.push(newProduct);
+    data.products.push(newProduct);
     // TODO: Get le newProduct avec son id
     newProduct.id = Math.round(Math.random()*1000000);
     resolve(newProduct);
   })
-}
-
-const addProductInList = function(listId, product, quantity){
-  // Recherche si le produit existe dans la liste
-  let productItem = getProductInList(listId, product.caption);
-  if(productItem){
-    // Le produit est déjà dans la liste
-    let quantity = productItem.quantity + (quantity?quantiy:1);
-    productItem.quantity = quantity;
-    //TODO save item in list
-  }else{
-    // Le produit n'est pas déjà dans la liste
-    // Vérifier s'il est dans la liste des produits
-    let productToAdd = searchProduct(product.caption);
-    if(!productToAdd){
-      // Si non, l'ajouter
-      productToAdd = addProduct(product);
-    }
-
-    let list = getListById(listId);
-    let newItem = {
-      product: {
-        id: productToAdd.id,
-        caption: productToAdd.caption,
-        shelf: productToAdd.shelf
-      },
-      quantity: (quantiy)?quantity:1
-    }
-    list.items.push(newItem)
-    return newItem;
-  }
 }
 
 app.get('/lists/:listId/items', function (req, res) {
@@ -410,6 +388,7 @@ const addItem = function(listId, newItem){
       }
       updateItem(listId, item.id, item)
       .then(itemUpdated => {
+        backupData();
         resolve(itemUpdated);
       })
       .catch(err => {
@@ -503,11 +482,11 @@ app.patch('/lists/:listId/items/:itemId', function (req, res) {
 });
 
 app.get('/places', function (req, res) {
-  res.send(sampleDataPlaces);
+  res.send(data.places);
 });
 
 app.get('/places/:id', function (req, res) {
-  res.send(sampleDataPlaces.find(place => place.id == req.params.id));
+  res.send(data.places.find(place => place.id == req.params.id));
 });
 
 app.post('/intent', function(req, res) {
@@ -580,3 +559,5 @@ app.post('/intent', function(req, res) {
       break;
   }
 })
+
+loadData();
