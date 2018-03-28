@@ -92,7 +92,7 @@ const authChecker = function(req, res, next){
     if(data.authTokens.find(validTokens => validTokens == AuthToken)){
       next();
     }else{
-      if(req.method == "OPTION")
+      if(req.method == "OPTIONS")
         next();
       else
         res.status(401).end();
