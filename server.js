@@ -86,7 +86,7 @@ let sampleProducts = [
   }]
 
 const authChecker = function(req, res, next){
-  console.log(req.method + " " + req.originalUrl);
+  console.log(req.method + " " + req.originalUrl + " " + req.get('Authorization'));
   if (req.path != "/login") {
     let AuthToken = req.get('Authorization');
     if(data.authTokens.find(validTokens => validTokens == AuthToken)){
@@ -99,12 +99,12 @@ const authChecker = function(req, res, next){
   }
 }
 
-app.use(authChecker);
 app.use(function(req, res, next){
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });
+app.use(authChecker);
 
 
 /***************
