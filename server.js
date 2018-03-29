@@ -159,6 +159,20 @@ const addList = function(list){
   })
 }
 
+const clearList = function(listId){
+  return new Promise((resolve, reject) => {
+    getListById(listId)
+    .then(list => {
+      list.items = [];
+      resolve(list);
+    })
+    .catch(err => {
+      reject(err);
+    })
+  })
+}
+
+
 app.get('/lists', function (req, res) {
   if(req.query.name){
     searchListByName(req.query.name)
@@ -180,13 +194,12 @@ app.get('/lists/:id', function (req, res) {
     res.status(404).send(err);
   })
 });
-    if(list){
-      res.send(list);
-      return;
-    }else{
-      res.status(404).end();
-      return;
-    }
+
+app.post('/lists/:id/clear', function (req, res) {
+  clearList(req.params.id).then( list => {
+    res.send(list);
+  }).catch(err => {
+    res.status(404).send(err);
   })
 });
 
