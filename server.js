@@ -491,22 +491,11 @@ app.post('/lists/:listId/items', function (req, res) {
 });
 
 app.patch('/lists/:listId/items/:itemId', function (req, res) {
-  let list = getListById(req.params.listId);
-  if(!list){
-    res.status(404).end("List not found");
-    return;
-  }
-  let item = getItemById(list.id, req.params.itemId);
-  if(!item){
-    res.status(404).end("Item not found in list");
-    return;
-  }else{
-    if(req.body.quantity){
-      listItemArrayIndex = list.items.indexOf(item);
-      list.items[listItemArrayIndex].quantity = req.body.quantity;
-      res.send(list.items[listItemArrayIndex]);
-    }
-  }
+  updateItem(req.params.listId, req.params.itemId, req.body)
+  .then(updatedItem => {
+      res.send(updatedItem);
+  })
+  .catch(err => { res.status(404).send(err);})
 });
 
 app.get('/places', function (req, res) {
