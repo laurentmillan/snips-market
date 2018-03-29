@@ -512,11 +512,34 @@ app.post('/lists/:listId/items', function (req, res) {
 app.patch('/lists/:listId/items/:itemId', function (req, res) {
   updateItem(req.params.listId, req.params.itemId, req.body)
   .then(updatedItem => {
-      res.send(updatedItem);
+    res.send(updatedItem);
   })
   .catch(err => { res.status(404).send(err);})
 });
 
+const deleteItem = function(listId, itemId){
+  return new Promise((resolve, reject) => {
+    getListById(listId).then(list => {
+      getItemById(listId, itemId)
+      .then(item => {
+        list.items.splice(list.items.indexOf(item), 1);
+        resolve();
+      })
+    })
+    .catch(err => {
+      console.log(err);
+      reject(err);
+    })
+  })
+}
+
+app.delete('/lists/:listId/items/:itemId', function (req, res) {
+  deleteItem(req.params.listId, req.params.itemId)
+  .then(() => {
+    res.status(200).end();
+  })
+  .catch(err => { res.status(404).send(err);})
+});
 
 
 /***************
