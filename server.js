@@ -109,10 +109,16 @@ app.use(function(req, res, next){
 });
 app.use(authChecker);
 
+const ERR = {
+  LIST_NOT_FOUND: "LIST_NOT_FOUND",
+  PRODUCT_NOT_FOUND: "PRODUCT_NOT_FOUND",
+  ITEM_NOT_FOUND: "ITEM_NOT_FOUND",
+}
 
 /***************
 * LISTS
 **************/
+
 const getLists = function(){
   return new Promise((resolve, reject) => {
     resolve(data.lists);
@@ -222,6 +228,20 @@ const getProductById = function(productId){
   });
 }
 
+const addProduct = function(product){
+  return new Promise((resolve, reject) => {
+    let newProduct = {
+      caption: product.caption,
+      names: product.names?product.names:[product.caption],
+      shelf: product.shelf?product.shelf:""
+    };
+    data.products.push(newProduct);
+    // TODO: Get le newProduct avec son id
+    newProduct.id = Math.round(Math.random()*1000000);
+    resolve(newProduct);
+  })
+}
+
 app.get('/products', function (req, res) {
   if(req.query.name){
     searchProductByName(req.query.name)
@@ -256,11 +276,6 @@ app.get('/products/:id', function (req, res) {
 /***************
 * ITEMS
 **************/
-const ERR = {
-  LIST_NOT_FOUND: "LIST_NOT_FOUND",
-  PRODUCT_NOT_FOUND: "PRODUCT_NOT_FOUND",
-  ITEM_NOT_FOUND: "ITEM_NOT_FOUND",
-}
 
 const getItemById = function(listId, itemId){
   return new Promise((resolve, reject) => {
@@ -349,20 +364,6 @@ const updateItem = function(listId, itemId, itemPatch){
     .catch(err => {
       reject(err);
     })
-  })
-}
-
-const addProduct = function(product){
-  return new Promise((resolve, reject) => {
-    let newProduct = {
-      caption: product.caption,
-      names: product.names?product.names:[product.caption],
-      shelf: product.shelf?product.shelf:""
-    };
-    data.products.push(newProduct);
-    // TODO: Get le newProduct avec son id
-    newProduct.id = Math.round(Math.random()*1000000);
-    resolve(newProduct);
   })
 }
 
@@ -497,6 +498,12 @@ app.patch('/lists/:listId/items/:itemId', function (req, res) {
   })
   .catch(err => { res.status(404).send(err);})
 });
+
+
+
+/***************
+* PLACES
+**************/
 
 app.get('/places', function (req, res) {
   res.send(data.places);
