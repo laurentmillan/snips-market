@@ -138,9 +138,9 @@ const searchListByName = function(listName){
 const getListById = function(listId){
   return new Promise((resolve, reject) => {
     getLists().then(lists => {
-      let list = lists.find(list => list.id == listId);
-      if(list) resolve(list);
-      else reject(ERR.LIST_NOT_FOUND);
+      resolve(lists.find(list => list.id == listId));
+    }).catch(err => {
+      reject(ERR.LIST_NOT_FOUND);
     })
   });
 }
@@ -175,6 +175,11 @@ app.get('/lists', function (req, res) {
 
 app.get('/lists/:id', function (req, res) {
   getListById(req.params.id).then( list => {
+    res.send(list);
+  }).catch(err => {
+    res.status(404).send(err);
+  })
+});
     if(list){
       res.send(list);
       return;
