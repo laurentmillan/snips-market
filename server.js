@@ -254,8 +254,8 @@ const addProduct = function(product){
       shelf: product.shelf?product.shelf:""
     };
     data.products.push(newProduct);
-    // TODO: Get le newProduct avec son id
     newProduct.id = Math.round(Math.random()*1000000);
+    backupData();
     resolve(newProduct);
   })
 }
@@ -377,6 +377,7 @@ const updateItem = function(listId, itemId, itemPatch){
 
       let list = data.lists.find(list => list.id == listId);
       list.items.splice(list.items.indexOf(item), 1, updatedItem);
+      backupData();
       resolve(updatedItem);
     })
     .catch(err => {
@@ -523,7 +524,8 @@ const deleteItem = function(listId, itemId){
       getItemById(listId, itemId)
       .then(item => {
         list.items.splice(list.items.indexOf(item), 1);
-        resolve();
+        backupData();
+        resolve(list);
       })
     })
     .catch(err => {
