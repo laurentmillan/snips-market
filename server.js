@@ -300,22 +300,31 @@ app.post('/products', function(req, res){
 
 const updateProduct = function(productId, productPatch){
   return new Promise((resolve, reject) => {
+    // Can't update id
+    delete productPatch.id;
+
     getProductById(productId)
     .then(product => {
-      //TODO Ici
-      let updatedItem = JSON.parse(JSON.stringify(item));
-      Object.keys(itemPatch).forEach(k => updatedItem[k] = itemPatch[k]);
+      let updatedProduct = JSON.parse(JSON.stringify(product));
+      Object.keys(productPatch).forEach(k => updatedProduct[k] = productPatch[k]);
 
-      let list = data.lists.find(list => list.id == listId);
-      list.items.splice(list.items.indexOf(item), 1, updatedItem);
+      data.products.splice(data.products.indexOf(product), 1, updatedProduct);
       backupData();
-      resolve(updatedItem);
+      resolve(updatedProduct);
     })
     .catch(err => {
       reject(err);
     })
   })
 }
+
+app.patch('/products/:id', function (req, res) {
+  updateProduct(req.params.id, req.body)
+  .then(updatedProduct => {
+    res.send(updatedProduct);
+  })
+  .catch(err => { res.status(404).send(err);})
+});
 
 
 /***************
