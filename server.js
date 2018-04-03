@@ -196,7 +196,7 @@ app.get('/lists/:id', function (req, res) {
   })
 });
 
-app.post('/lists/:id/clear', function (req, res) {
+app.delete('/lists/:id/items', function (req, res) {
   clearList(req.params.id).then( list => {
     res.send(list);
   }).catch(err => {
