@@ -309,6 +309,15 @@ const updateProduct = function(productId, productPatch){
       let updatedProduct = JSON.parse(JSON.stringify(product));
       Object.keys(productPatch).forEach(k => updatedProduct[k] = productPatch[k]);
 
+      // Check if product is used in a list
+      data.lists.forEach(list => {
+        list.items.forEach(item => {
+          if(item.product.id == productId){
+            item.product = updatedProduct;
+          }
+        })
+      })
+
       data.products.splice(data.products.indexOf(product), 1, updatedProduct);
       backupData();
       resolve(updatedProduct);
