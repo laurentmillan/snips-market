@@ -332,19 +332,23 @@ const deleteProduct = function(productId){
     getProductById(productId)
     .then(product => {
 
+      let productIsUsed = false;
       // Check if product is used in a list
       data.lists.forEach(list => {
         list.items.forEach(item => {
           if(item.product.id == productId){
-            reject(ERR.PRODUCT_USED_IN_LIST);
-            return;
+            productIsUsed = true;
           }
         })
       })
 
-      data.products.splice(data.products.indexOf(product), 1);
-      backupData();
-      resolve(product);
+      if(productIsUsed)
+        reject(ERR.PRODUCT_USED_IN_LIST);
+      else{
+        data.products.splice(data.products.indexOf(product), 1);
+        backupData();
+        resolve(product);
+      }
     })
     .catch(err => {
       reject(err);
