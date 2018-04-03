@@ -114,6 +114,7 @@ const ERR = {
   LIST_NOT_FOUND: "LIST_NOT_FOUND",
   PRODUCT_NOT_FOUND: "PRODUCT_NOT_FOUND",
   ITEM_NOT_FOUND: "ITEM_NOT_FOUND",
+  PRODUCT_USED_IN_LIST: "PRODUCT_USED_IN_LIST"
 }
 
 /***************
@@ -325,6 +326,41 @@ app.patch('/products/:id', function (req, res) {
   })
   .catch(err => { res.status(404).send(err);})
 });
+
+const deleteProduct = function(productId){
+  return new Promise((resolve, reject) => {
+    getProductById(productId)
+    .then(product => {
+
+      // Check if product is used in a list
+      data.lists.forEach(list => {
+        list.items.forEach(item => {
+          if(item.product.id == productId){
+            reject(ERR.PRODUCT_USED_IN_LIST);
+            return;
+          }
+        })
+      })
+
+      data.products.splice(data.products.indexOf(product), 1);
+      backupData();
+      resolve(product);
+    })
+    .catch(err => {
+      reject(err);
+    })
+  })
+}
+
+app.delete('/products/:id', function(req, res){
+  deleteProduct(req.params.id)
+  .then(productDeleted => {
+    res.status(200).end();
+  }).catch(err => {
+    res.status(403).end();
+  })
+})
+
 
 
 /***************
