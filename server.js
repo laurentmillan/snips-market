@@ -290,6 +290,32 @@ app.get('/products/:id', function (req, res) {
   })
 });
 
+app.post('/products', function(req, res){
+  addProduct(req.body).then(product => {
+    res.send(product);
+  }).catch( err => {
+    res.status(404).send(err);
+  })
+})
+
+const updateProduct = function(productId, productPatch){
+  return new Promise((resolve, reject) => {
+    getProductById(productId)
+    .then(product => {
+      //TODO Ici
+      let updatedItem = JSON.parse(JSON.stringify(item));
+      Object.keys(itemPatch).forEach(k => updatedItem[k] = itemPatch[k]);
+
+      let list = data.lists.find(list => list.id == listId);
+      list.items.splice(list.items.indexOf(item), 1, updatedItem);
+      backupData();
+      resolve(updatedItem);
+    })
+    .catch(err => {
+      reject(err);
+    })
+  })
+}
 
 
 /***************
