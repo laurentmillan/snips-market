@@ -114,7 +114,9 @@ const ERR = {
   LIST_NOT_FOUND: "LIST_NOT_FOUND",
   PRODUCT_NOT_FOUND: "PRODUCT_NOT_FOUND",
   ITEM_NOT_FOUND: "ITEM_NOT_FOUND",
-  PRODUCT_USED_IN_LIST: "PRODUCT_USED_IN_LIST"
+  PLACE_NOT_FOUND: "PLACE_NOT_FOUND",
+  PRODUCT_USED_IN_LIST: "PRODUCT_USED_IN_LIST",
+  PLACE_USED_IN_LIST: "PLACE_USED_IN_LIST"
 }
 
 /***************
@@ -633,13 +635,109 @@ app.delete('/lists/:listId/items/:itemId', function (req, res) {
 * PLACES
 **************/
 
+const getPlaces = function(){
+  return new Promise((resolve, reject) => {
+    resolve(data.places);
+  });
+}
+
+const getPlaceById = function(placeId){
+  return new Promise((resolve, reject) => {
+    getPlaces().then(places => {
+      resolve(places.find(place => place.id == placeId));
+    }).catch(err => {
+      reject(ERR.PLACE_NOT_FOUND);
+    })
+  });
+}
+
 app.get('/places', function (req, res) {
-  res.send(data.places);
+  getPlaces().then(places => {
+    res.send(places);
+  }).catch(err => {
+    res.status(500).end();
+  })
 });
 
 app.get('/places/:id', function (req, res) {
-  res.send(data.places.find(place => place.id == req.params.id));
+  getPlaceById(req.params.id).then(place => {
+    res.send(place);
+  }).catch(err => {
+    res.status(404).send(err);
+  })
 });
+
+const updatePlace = function(placeId, placePatch){
+  return new Promise((resolve, reject) => {
+    // Can't update id
+    delete placePatch.id;
+
+    getPlaceById(placeId)
+    .then(place => {
+      let updatedPlace = JSON.parse(JSON.stringify(place));
+      Object.keys(placePatch).forEach(k => updatedPlace[k] = placePatch[k]);
+
+      // Check if place is used in a list
+      data.lists.forEach(list => {
+        if(list.place.id == placeId){
+          list.place = updatedPlace;
+        }
+      })
+
+      data.places.splice(data.places.indexOf(place), 1, updatedPlace);
+      saveData();
+      resolve(updatedPlace);
+    })
+    .catch(err => {
+      reject(err);
+    })
+  })
+}
+
+app.patch('/places/:id', function (req, res) {
+  updatePlace(req.params.id, req.body)
+  .then(updatedPlace => {
+    res.send(updatedPlace);
+  })
+  .catch(err => { res.status(404).send(err);})
+});
+
+const deletePlace = function(placeId){
+  return new Promise((resolve, reject) => {
+    getPlaceById(placeId)
+    .then(place => {
+
+      let placeIsUsed = false;
+      // Check if place is used in a list
+      data.lists.forEach(list => {
+        if(list.place.id == placeId){
+          placeIsUsed = true;
+        }
+      })
+
+      if(placeIsUsed)
+        reject(ERR.PLACE_USED_IN_LIST);
+      else{
+        data.places.splice(data.places.indexOf(place), 1);
+        saveData();
+        resolve(place);
+      }
+    })
+    .catch(err => {
+      reject(err);
+    })
+  })
+}
+
+app.delete('/places/:id', function(req, res){
+  deletePlace(req.params.id)
+  .then(placeDeleted => {
+    res.status(200).end();
+  }).catch(err => {
+    res.status(403).end();
+  })
+})
+
 
 app.post('/intent', function(req, res) {
   let snipsRes = req.body;
