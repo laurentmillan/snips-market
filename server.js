@@ -23,8 +23,8 @@ app.use(bodyParser.json({limit: '50mb'}));
 const server = http.createServer(app).listen(config.serverPort, function () {
 });
 
-const backupData = function(){
-  fs.writeFile("data/db.json", JSON.stringify(data), function(err) {
+const saveData = function(){
+  fs.writeFile("data/db.json", JSON.stringify(data, null, 2), function(err) {
       if(err)
         return console.log(err);
       console.log("Data saved");
@@ -158,7 +158,7 @@ const addList = function(list){
       items: []
     }
     data.lists.push(listToAdd);
-    backupData();
+    saveData();
     resolve(listToAdd);
   })
 }
@@ -259,7 +259,7 @@ const addProduct = function(product){
     };
     data.products.push(newProduct);
     newProduct.id = Math.round(Math.random()*1000000);
-    backupData();
+    saveData();
     resolve(newProduct);
   })
 }
@@ -321,7 +321,7 @@ const updateProduct = function(productId, productPatch){
       })
 
       data.products.splice(data.products.indexOf(product), 1, updatedProduct);
-      backupData();
+      saveData();
       resolve(updatedProduct);
     })
     .catch(err => {
@@ -357,7 +357,7 @@ const deleteProduct = function(productId){
         reject(ERR.PRODUCT_USED_IN_LIST);
       else{
         data.products.splice(data.products.indexOf(product), 1);
-        backupData();
+        saveData();
         resolve(product);
       }
     })
@@ -446,7 +446,7 @@ const addItemInList = function(listId, newItem){
     .then(list => {
       newItem.id = Math.round(Math.random()*1000000000);
       list.items.push(newItem);
-      backupData();
+      saveData();
       resolve(newItem);
     })
     .catch(err => {
@@ -464,7 +464,7 @@ const updateItem = function(listId, itemId, itemPatch){
 
       let list = data.lists.find(list => list.id == listId);
       list.items.splice(list.items.indexOf(item), 1, updatedItem);
-      backupData();
+      saveData();
       resolve(updatedItem);
     })
     .catch(err => {
@@ -523,7 +523,7 @@ const addItem = function(listId, newItem){
       }
       updateItem(listId, item.id, item)
       .then(itemUpdated => {
-        backupData();
+        saveData();
         resolve(itemUpdated);
       })
       .catch(err => {
@@ -611,7 +611,7 @@ const deleteItem = function(listId, itemId){
       getItemById(listId, itemId)
       .then(item => {
         list.items.splice(list.items.indexOf(item), 1);
-        backupData();
+        saveData();
         resolve(list);
       })
     })
