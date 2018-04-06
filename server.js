@@ -215,6 +215,35 @@ app.post('/lists', function(req, res){
   })
 })
 
+const updateList = function(listId, listPatch){
+  return new Promise((resolve, reject) => {
+    // Can't update id
+    delete listPatch.id;
+
+    getListById(listId)
+    .then(list => {
+      let updatedList = JSON.parse(JSON.stringify(list));
+      Object.keys(listPatch).forEach(k => updatedList[k] = listPatch[k]);
+
+      data.lists.splice(data.lists.indexOf(list), 1, updatedList);
+      saveData();
+      resolve(updatedList);
+    })
+    .catch(err => {
+      reject(err);
+    })
+  })
+}
+
+app.patch('/lists/:id', function (req, res) {
+  updateList(req.params.id, req.body)
+  .then(updatedList => {
+    res.send(updatedList);
+  })
+  .catch(err => { res.status(404).send(err);})
+});
+
+
 
 /***************
 * PRODUCTS
@@ -737,6 +766,28 @@ app.delete('/places/:id', function(req, res){
     res.status(403).end();
   })
 })
+
+const addPlace = function(place){
+  return new Promise((resolve, reject) => {
+    let newPlace = {
+      name: place.name,
+      shelves: []
+    };
+    data.places.push(newPlace);
+    newPlace.id = Math.round(Math.random()*1000000);
+    saveData();
+    resolve(newPlace);
+  })
+}
+
+app.post('/places', function(req, res){
+  addPlace(req.body).then(place => {
+    res.send(place);
+  }).catch( err => {
+    res.status(404).send(err);
+  })
+})
+
 
 
 app.post('/intent', function(req, res) {
