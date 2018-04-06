@@ -659,6 +659,42 @@ app.delete('/lists/:listId/items/:itemId', function (req, res) {
   .catch(err => { res.status(404).send(err);})
 });
 
+const getPrintableList = function(listId){
+  return new Promise((resolve, reject) => {
+    getListById(listId)
+    .then(list => {
+      let remainingItems = JSON.parse(JSON.stringify(list.items));
+      let orederedList = [];
+      // Go through all shelves of list's place
+      list.place.shelves.forEach(placeShelf => {
+        // Filter items for this shelf
+        let itemsForShelf = []
+        remainingItems.forEach(item => {
+          if(item.product.shelf == placeShelf){
+            itemsForShelf.push(item);
+            // remove the item from the remainingItems list
+            let remainingItemToRemove = remainingItems.find(itemToRemove => itemToRemove.id == item.id)
+            remainingItems.splice(remainingItems.indexOf(remainingItemToRemove), 1);
+          }
+        });
+        // Add to the ordered list
+        orederedList = orederedList.concat(itemsForShelf);
+      })
+
+      // Add the remaining items
+      orederedList = orederedList.concat(remainingItems);
+      let printableList = JSON.parse(JSON.stringify(list)).items = orederedList;
+      resolve(printableList);
+    }).catch(err => { reject(err) })
+  })
+}
+
+app.get('/lists/:listId/printable', function(req, res){
+  getPrintableList(req.params.listId).then(list => {
+    res.send(list);
+  }).catch(err => {  res.status(404).send(err); })
+})
+
 
 /***************
 * PLACES
