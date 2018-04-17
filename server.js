@@ -663,28 +663,11 @@ const getPrintableList = function(listId){
   return new Promise((resolve, reject) => {
     getListById(listId)
     .then(list => {
-      let remainingItems = JSON.parse(JSON.stringify(list.items));
-      let orederedList = [];
-      // Go through all shelves of list's place
-      list.place.shelves.forEach(placeShelf => {
-        // Filter items for this shelf
-        let itemsForShelf = []
-        remainingItems.forEach(item => {
-          if(item.product.shelf == placeShelf){
-            itemsForShelf.push(item);
-            // remove the item from the remainingItems list
-            let remainingItemToRemove = remainingItems.find(itemToRemove => itemToRemove.id == item.id)
-            remainingItems.splice(remainingItems.indexOf(remainingItemToRemove), 1);
-          }
-        });
-        // Add to the ordered list
-        orederedList = orederedList.concat(itemsForShelf);
-      })
-
-      // Add the remaining items
-      orederedList = orederedList.concat(remainingItems);
-      let printableList = JSON.parse(JSON.stringify(list)).items = orederedList;
-      resolve(printableList);
+      var sortItemByShelf = function(a, b){
+      	return list.place.shelves.indexOf(a.product.shelf) - list.place.shelves.indexOf(b.product.shelf)
+      }
+      list.items = list.items.sort(sortItemByShelf)
+      resolve(list);
     }).catch(err => { reject(err) })
   })
 }
