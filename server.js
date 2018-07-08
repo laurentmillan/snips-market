@@ -511,6 +511,7 @@ app.get('/lists/:listId/items', function (req, res) {
     .catch( err => {
       switch(err){
         case ERR.LIST_NOT_FOUND: res.status(404).end("List not found"); break;
+        case ERR.ITEM_NOT_FOUND: res.status(404).end("Item not found"); break;
         case ERR.PRODUCT_NOT_FOUND: res.status(404).end("Product not found"); break;
       }
     })
